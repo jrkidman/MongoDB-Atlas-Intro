@@ -1,4 +1,5 @@
 // Create a single blog post stored in a variable
+
 const blogPosts =
 {
     createdAt: "2022-03-22T10:36:37.176Z",
@@ -8,8 +9,9 @@ const blogPosts =
     id: "1",
 }
 
+
 // Add the single blog post contained in the variable to the database
-db.posts.insertOne(blogPosts)
+db.posts.insertOne(blogPosts);
 
 // Add multiple entries to the database as an array; accidentally ran this twice without commenting it out so I had 10 entries, 2 of each
 db.posts.insertMany([
@@ -44,29 +46,13 @@ db.posts.insertMany([
 ])
 
 // Use find to read one document
-db.posts.find({
-    author: "Darren Abbott"
-})
+db.posts.find({author: "Darren Abbott"})
 
 // Updated the document with the author Darren Abbot to have the author name as my name.  This changed 2 docuents bc of my duplicates.
-db.posts.updateOne({
-    author: "Darren Abbott"
-}, {
-    $set: {
-        author: "Jill K"
-    }
-})
+db.posts.updateOne({author: "Darren Abbott"},{$set: {author: "Jill K"}})
 
 // Use updateMany to update all records with an id number >=3 to change the author name to "your mom".  This changed 6 documents bc of my duplicates.
-db.posts.updateMany({
-    id: {
-        $gte: "3"
-    }
-}, {
-    $set: {
-        author: "Your Mom"
-    }
-})
+db.posts.updateMany({id: {$gte: "3"}},{$set: {author: "Your Mom"}})
 db.posts.find({})
 
 
@@ -86,15 +72,86 @@ db.posts.deleteOne({ "_id": ObjectId("628d080dfaf6c585075edd90") })
 
 
 // Switch to second part of assignment, adding 50 documents and returning sorted by given field
-const getPosts = (limit = 50, skip = 0, sortField, sortOrder, filterField, filterValue) => {
+const getPosts = (limit, skip, sortField, sortOrder, filterField, filterValue) => {
 
-    const dSort = sortField && sortOrder ? { [sortField]: sortOrder } : {}
-    const dFilter = filterField && filterValue ? { [filterField]: filterValue } : {}
+    const dLimit = limit ? limit : 50
+    const dSkip = skip ? skip : 0
+    const dSort = sortField && sortOrder ? {[sortField]: sortOrder} : {}
+    const dFilter = filterField && filterValue ? {[filterField]: filterValue} : {}
 
     let dbResult = [];
-    dbResult = db.blogs50.find(dFilter).limit(limit).skip(skip).sort(dSort).toArray();
+    dbResult = db.blogs50.find(dFilter).limit(dLimit).skip(dSkip).sort(dSort).toArray();
     return dbResult
 }
-
 console.log(getPosts(5, "", "", "", "", ""))
 
+
+
+//findPost(blogId) should return a single blog post given an ID
+const findPost = (blogId) => {
+    const findBlogById = blogId ? {id : blogId} : {};
+    return db.blogs50.find(findBlogById).toArray();
+}
+console.log(findPost(2));
+
+
+
+// * getPostsCollectionLength() should return a number representing the total length of the blog posts collection.
+const getPostsCollectionLength = () => {
+    return db.blogs50.count()
+}
+console.log(getPostsCollectionLength())
+
+
+// * makePost(blogId, title, text, author, category) should create a new blog post in mongo. Remember you need to generate 
+// and add a createdAt date, and a lastModified date to the post before inserting it into the collection. Additionally, blogId 
+// should be calculated by taking the total length of blog posts in the database and adding 1 to it. Hint: use the 
+// getPostsCollectionLength() function to quickly determine the current length of the collection.
+
+
+const makePost = (title, text, author, category) => {
+    const blogTitle = title ? title : "";
+    const blogText = text ? text : "";
+    const blogAuthor = author ? author : "";
+    const blogCategory = category ? category : "";
+    
+    db.blogs50.insertOne(
+    {
+        createdAt: new Date(),
+        title: blogTitle,
+        text: blogText,
+        author: blogAuthor,
+        category: blogCategory,
+        lastModifiedDate: new Date(),
+        id: getPostsCollectionLength()+1
+    })}
+    
+    // makePost("poop", "poop", "poop", "poop")
+    // db.blogs50.find({})
+
+
+    // * updatePost(blogId, title, text, author, category) should find a post matching the id of blogId and then update the title, 
+// text, author and category fields with the inputted information. Remember, since lastModified is a representation of when the 
+// post was last updated (including creation), you will have to update lastModified to the current date and time as well.
+
+const updatePost = (blogId, title, text, author, category) => {
+    
+    //find the blog to update
+    const blogToUpdate = findPost(blogId)[0];
+    
+    const blogTitle = title ? title : blogToUpdate.title;
+    const blogText = text ? text : blogToUpdate.text;
+    const blogAuthor = author ? author : blogToUpdate.author;
+    const blogCategory = category ? category : blogToUpdate.category;
+    
+    const updatedBlog = {
+        title: blogTitle,
+        text: blogText,
+        author: blogAuthor,
+        category: blogCategory,
+        lastModifiedDate: new Date(),
+    }
+    return db.blogs50.updateOne({id: 54},{$set:updatedBlog})
+}
+
+updatePost(54, "poopy", "poopy", "poopy", "poopy")
