@@ -157,17 +157,15 @@ const updatePost = (blogId, title, text, author, category) => {
 // * deletePosts(blogIds) should take in an ARRAY of blogId's in the blogIds param. 
 // The function should iterate through the array of blogId's and delete all the blog posts with matching id's. 
 
-const postsToDelete = [55, 54, 53]
 
-const deletePosts = (blogIdArray) => {
-    for (let id of postsToDelete) {
-        db.blogs50.deleteOne({id: id})
+const deletePosts = (inputBlogIds) => {
+    for (let ids of inputBlogIds){
+        db.blogs50.deleteOne({id: ids});
     }
 }
 
-deletePosts(postsToDelete)
-// db.blogs50.find({})
-
+deletePosts([14,15]);
+db.blogs50.find({})
 
 
 // * Stretch Goal: 
