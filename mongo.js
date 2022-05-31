@@ -46,13 +46,13 @@ db.posts.insertMany([
 ])
 
 // Use find to read one document
-db.posts.find({author: "Darren Abbott"})
+db.posts.find({ author: "Darren Abbott" })
 
 // Updated the document with the author Darren Abbot to have the author name as my name.  This changed 2 docuents bc of my duplicates.
-db.posts.updateOne({author: "Darren Abbott"},{$set: {author: "Jill K"}})
+db.posts.updateOne({ author: "Darren Abbott" }, { $set: { author: "Jill K" } })
 
 // Use updateMany to update all records with an id number >=3 to change the author name to "your mom".  This changed 6 documents bc of my duplicates.
-db.posts.updateMany({id: {$gte: "3"}},{$set: {author: "Your Mom"}})
+db.posts.updateMany({ id: { $gte: "3" } }, { $set: { author: "Your Mom" } })
 db.posts.find({})
 
 
@@ -76,8 +76,8 @@ const getPosts = (limit, skip, sortField, sortOrder, filterField, filterValue) =
 
     const dLimit = limit ? limit : 50
     const dSkip = skip ? skip : 0
-    const dSort = sortField && sortOrder ? {[sortField]: sortOrder} : {}
-    const dFilter = filterField && filterValue ? {[filterField]: filterValue} : {}
+    const dSort = sortField && sortOrder ? { [sortField]: sortOrder } : {}
+    const dFilter = filterField && filterValue ? { [filterField]: filterValue } : {}
 
     let dbResult = [];
     dbResult = db.blogs50.find(dFilter).limit(dLimit).skip(dSkip).sort(dSort).toArray();
@@ -88,11 +88,10 @@ console.log(getPosts(5, "", "", "", "", ""))
 
 
 //findPost(blogId) should return a single blog post given an ID
-const findPost = (blogId) => {
-    const findBlogById = blogId ? {id : blogId} : {};
-    return db.blogs50.find(findBlogById).toArray();
+const findPostById = (blogId) => {
+    return db.blogs50.find({ id: blogId }).toArray();
 }
-console.log(findPost(2));
+console.log(findPostById(2));
 
 
 
@@ -114,44 +113,90 @@ const makePost = (title, text, author, category) => {
     const blogText = text ? text : "";
     const blogAuthor = author ? author : "";
     const blogCategory = category ? category : "";
-    
-    db.blogs50.insertOne(
-    {
+
+    const newBlog = {
         createdAt: new Date(),
         title: blogTitle,
         text: blogText,
         author: blogAuthor,
         category: blogCategory,
-        lastModifiedDate: new Date(),
-        id: getPostsCollectionLength()+1
-    })}
-    
-    // makePost("poop", "poop", "poop", "poop")
-    // db.blogs50.find({})
+        lastModified: new Date(),
+        id: getPostsCollectionLength() + 1
+    }
+    return db.blogs50.insertOne(newBlog);
+}
+
+// makePost("poop", "poop", "poop", "poop")
+// db.blogs50.find({})
 
 
-    // * updatePost(blogId, title, text, author, category) should find a post matching the id of blogId and then update the title, 
-// text, author and category fields with the inputted information. Remember, since lastModified is a representation of when the 
-// post was last updated (including creation), you will have to update lastModified to the current date and time as well.
+// * updatePost(blogId, title, text, author, category) should find a post matching the id of blogId and then update the title, text, author and category fields with the inputted information. Remember, since lastModified is a representation of when the post was last updated (including creation), you will have to update lastModified to the current date and time as well.
 
 const updatePost = (blogId, title, text, author, category) => {
-    
+
     //find the blog to update
-    const blogToUpdate = findPost(blogId)[0];
-    
+    const blogToUpdate = findPostById(blogId)[0];
+
     const blogTitle = title ? title : blogToUpdate.title;
     const blogText = text ? text : blogToUpdate.text;
     const blogAuthor = author ? author : blogToUpdate.author;
     const blogCategory = category ? category : blogToUpdate.category;
-    
+
     const updatedBlog = {
         title: blogTitle,
         text: blogText,
         author: blogAuthor,
         category: blogCategory,
-        lastModifiedDate: new Date(),
+        lastModified: new Date(),
     }
-    return db.blogs50.updateOne({id: 54},{$set:updatedBlog})
+    return db.blogs50.updateOne({id: blogId}, {$set: updatedBlog})
 }
 
-updatePost(54, "poopy", "poopy", "poopy", "poopy")
+// updatePost(54, "poopy", "poopy", "poopy", "poopy")
+
+// * deletePosts(blogIds) should take in an ARRAY of blogId's in the blogIds param. 
+// The function should iterate through the array of blogId's and delete all the blog posts with matching id's. 
+
+const postsToDelete = [55, 54, 53]
+
+const deletePosts = (blogIdArray) => {
+    for (let id of postsToDelete) {
+        db.blogs50.deleteOne({id: id})
+    }
+}
+
+deletePosts(postsToDelete)
+// db.blogs50.find({})
+
+
+
+// * Stretch Goal: 
+//         * Iterate through the posts collection and generate a list of author names. Create a new collection in your blogs database called users 
+//           (this collection should be on the same hierarchical level as the posts collection). For every author in the list do the following: 
+//         * Create and insert a new user object into the users collection with the following fields: 
+//             * firstName 
+//             * lastName 
+//             * userId - a unique id. It can be the same scheme as the posts id, a number representing the current length of the collection + 1
+//             * email - should be the following format <firstName>.<lastName>@gmail.com, all lowercase letters, with no whitespace in the email
+//               address.
+//             * posts - should be a list of mongo OBJECTID's representing a list of every post that author has made. 
+//             * E.G. if this post exists: 
+//                 {
+//                     "_id": new ObjectId("628d233e1505f82ea360a613")
+//                     "createdAt": "2021-06-08T12:25:55.889Z",
+//                     "title": "officia",
+//                     "text": "Lorem Ipsum.",
+//                     "author": "Jacqueline Hudson",
+//                     "lastModified": "2022-05-24T00:55:08.105Z",
+//                     "category": "dolores",
+//                     "id": "2"
+//                 }
+//             Then the following user should be generated and inserted into the users collection:
+//                 {
+//                     "firstName": "Jacqueline"
+//                     "lastName": "Hudson"
+//                     "userId": "1"
+//                     "email": "jacqueline.hudson@gmail.com"
+//                     "posts": [new ObjectId("628d233e1505f82ea360a613")]
+//                 }
+
